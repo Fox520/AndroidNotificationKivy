@@ -9,6 +9,7 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen, ScreenManager
 from plyer.platforms.android import activity, SDK_INT
 
+from android.runnable import run_on_ui_thread
 from jnius import autoclass, cast
 
 Context = autoclass("android.content.Context")
@@ -29,7 +30,7 @@ PythonActivity = autoclass('org.kivy.android.PythonActivity')
 currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
 activityContext = cast('android.content.Context', currentActivity.getApplicationContext())
 
-test_image_path = "image.jpg"
+test_image_path = "image.png"
 
 Builder.load_string('''
 
@@ -55,22 +56,26 @@ def create_notification_channel():
 
     mNotificationManagerCompat = getattr(NotificationManagerCompat, 'from')(activityContext)
 
+@run_on_ui_thread
 def send_notification():
 
     MediaStyle = autoclass("android.support.v4.media.app.NotificationCompat$MediaStyle")
+    MediaSessionCompat = autoclass("android.support.v4.media.session.MediaSessionCompat")
+    mediaSession = MediaSessionCompat(activityContext, aString("TAG"))
 
     artwork = BitmapFactory.decodeFile(test_image_path)
     channel1 = NotificationBuilder(activityContext, CHANNEL_ID_1)\
         .setSmallIcon(17301618)\
         .setLargeIcon(artwork)\
-        .setContentTitle(aString("Let me Love you - DJ snake"))\
-        .setContentText(aString("Song by Justin Bieber"))\
+        .setContentTitle(aString("Hola"))\
+        .setContentText(aString("Ozuna"))\
         .addAction(17301541, aString("previous"), None)\
         .addAction(17301540, aString("play"), None)\
         .addAction(17301538, aString("next"), None)\
         .setStyle(MediaStyle()
-                  .setShowActionsInCompactView(0, 1, 2)) \
-        .setSubText("Subtext")\
+                  .setShowActionsInCompactView(0, 1, 2)
+                  .setMediaSession(mediaSession.getSessionToken())) \
+        .setSubText("1/1")\
         .setPriority(NotificationCompat.PRIORITY_LOW)\
         .setAutoCancel(False)\
         .setOngoing(True)\
